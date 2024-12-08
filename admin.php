@@ -49,10 +49,17 @@ if (isset($_GET['delete']) && isset($_GET['group'])) {
     exit;
 }
 
-// List groups
-$groups = array_filter(scandir($dataDir), function($file) {
-    return preg_match('/^group_.*\.csv$/', $file);
-});
+// Handle group viewing
+if (isset($_GET['view']) && isset($_GET['group'])) {
+    $groupFile = $dataDir . basename($_GET['group']) . '.csv';
+    if (file_exists($groupFile)) {
+        $groupContent = file_get_contents($groupFile);
+        $lines = explode("\n", trim($groupContent));
+    } else {
+        $groupContent = "Il gruppo selezionato non esiste.";
+        $lines = [];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -63,23 +70,43 @@ $groups = array_filter(scandir($dataDir), function($file) {
 </head>
 <body>
     <h1>Gestione Gruppi di Secret Santa</h1>
-    <h2>Gruppi Esistenti:</h2>
-    <ul>
-        <?php
-        if (empty($groups)) {
-            echo "<li>Nessun gruppo trovato.</li>";
-        } else {
-            foreach ($groups as $groupFile) {
-                $groupId = basename($groupFile, '.csv');
-                echo "<li>
-                    <strong>ID Gruppo:</strong> $groupId 
-                    - <a href='admin.php?delete=1&group=$groupId' onclick='return confirm(\"Sei sicuro di voler eliminare questo gruppo?\");'>Elimina</a>
-                </li>";
+    
+    <?php if (isset($lines)): ?>
+        <h2>Dettagli del Gruppo: <?= htmlspecialchars($_GET['group']) ?></h2>
+        <ul>
+            <?php foreach ($lines as $line): ?>
+                <?php
+                $pair = explode(",", trim($line));
+                if (count($pair) === 2) {
+                    echo "<li><strong>" . htmlspecialchars($pair[0]) . "</strong> → " . htmlspecialchars($pair[1]) . "</li>";
+                }
+                ?>
+            <?php endforeach; ?>
+        </ul>
+        <a href="admin.php">Torna alla gestione gruppi</a>
+    <?php else: ?>
+        <h2>Gruppi Esistenti:</h2>
+        <ul>
+            <?php
+            $groups = array_filter(scandir($dataDir), function($file) {
+                return preg_match('/^group_.*\.csv$/', $file);
+            });
+            if (empty($groups)) {
+                echo "<li>Nessun gruppo trovato.</li>";
+            } else {
+                foreach ($groups as $groupFile) {
+                    $groupId = basename($groupFile, '.csv');
+                    echo "<li>
+                        <strong>ID Gruppo:</strong> $groupId 
+                        - <a href='admin.php?view=1&group=$groupId'>Visualizza</a>
+                        - <a href='admin.php?delete=1&group=$groupId' onclick='return confirm(\"Sei sicuro di voler eliminare questo gruppo?\");'>Elimina</a>
+                    </li>";
+                }
             }
-        }
-        ?>
-    </ul>
+            ?>
+        </ul>
+    <?php endif; ?>
     <a href="index.php">Torna alla Home</a>
-    <p><a href="?admin">Crea un gruppo</a></p>
+    <a href="index.php?admin">Aggiungi gruppo</a>
 </body>
 </html>
