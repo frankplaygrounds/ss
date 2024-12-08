@@ -128,6 +128,6 @@ if (isset($_GET['group']) && isset($_GET['name'])) {
 </head>
 <body>
     <h1>Benvenuto in Secret Santa!</h1>
-    <p>Sei un amministratore? <a href="?admin">Crea un gruppo</a></p>
+    <p>Sei un amministratore? <a href="admin.php">Gestisci gruppi</a></p>
 </body>
 </html>
