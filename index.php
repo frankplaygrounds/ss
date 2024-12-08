@@ -5,6 +5,11 @@ if (!is_dir($dataDir)) {
     mkdir($dataDir, 0777, true);
 }
 
+// Include PHPExcel library
+require 'vendor/autoload.php';
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 // Admin Page: Create a Secret Santa group
 if (isset($_GET['admin'])) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,8 +42,28 @@ if (isset($_GET['admin'])) {
         }
         fclose($handle);
 
-        echo "Gruppo creato con successo! ID gruppo: <strong>$groupId</strong><br>";
-        echo "Condividi i link del tipo: <code>?group=$groupId&name=Nome</code>";
+        // Generate Excel file with participant links
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Nome');
+        $sheet->setCellValue('B1', 'Link');
+
+        $baseUrl = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+        $row = 2;
+        foreach ($givers as $giver) {
+            $link = $baseUrl . '?group=' . $groupId . '&name=' . urlencode($giver);
+            $sheet->setCellValue("A$row", $giver);
+            $sheet->setCellValue("B$row", $link);
+            $row++;
+        }
+
+        $excelFile = $dataDir . $groupId . '_links.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($excelFile);
+
+        // Provide download link for the Excel file
+        echo "Gruppo creato con successo! Scarica i link per i partecipanti qui: ";
+        echo "<a href='$excelFile' download>Scarica il file Excel</a><br>";
         exit;
     }
 ?>
