@@ -80,5 +80,6 @@ $groups = array_filter(scandir($dataDir), function($file) {
         ?>
     </ul>
     <a href="index.php">Torna alla Home</a>
+    <p><a href="?admin">Crea un gruppo</a></p>
 </body>
 </html>
